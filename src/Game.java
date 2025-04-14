@@ -1,4 +1,3 @@
-
 import View.StartMenu;
 
 import javax.swing.*;

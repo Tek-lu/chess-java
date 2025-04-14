@@ -1,39 +1,87 @@
 package Model.piece;
 
-import Model.Board;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
+
+import Model.*;
 
 public class Knight extends Piece {
 
-    public Knight(int color, Square initSq, String img_file) {
-        super(color, initSq, img_file);
+    public Knight(PieceColor color, Position position) {
+        super(color, position);
     }
 
     @Override
-    public List<Square> getLegalMoves(Board b) {
-        LinkedList<Square> legalMoves = new LinkedList<Square>();
-        Square[][] board = b.getSquareArray();
-        
-        int x = this.getPosition().getXNum();
-        int y = this.getPosition().getYNum();
-        
-        for (int i = 2; i > -3; i--) {
-            for (int k = 2; k > -3; k--) {
-                if(Math.abs(i) == 2 ^ Math.abs(k) == 2) {
-                    if (k != 0 && i != 0) {
-                        try {
-                            legalMoves.add(board[y + k][x + i]);
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            continue;
-                        }
+    protected String determineImageFile() {
+        return getColor() == PieceColor.WHITE ? "/wknight.png" : "/bknight.png";
+    }
+
+    @Override
+    public List<Move> getLegalMoves(Board board) {
+        List<Move> legalMoves = new ArrayList<>();
+        Position position = getPosition();
+        int x = position.getX();
+        int y = position.getY();
+
+        // Knight move offsets
+        int[][] moveOffsets = {
+                {-2, -1}, {-2, 1}, {-1, -2}, {-1, 2},
+                {1, -2}, {1, 2}, {2, -1}, {2, 1}
+        };
+
+        for (int[] offset : moveOffsets) {
+            Position targetPos = new Position(x + offset[0], y + offset[1]);
+
+            if (board.isValidPosition(targetPos)) {
+                Piece targetPiece = board.getPiece(targetPos);
+
+                // Empty square or opponent's piece
+                if (targetPiece == null || targetPiece.getColor() != getColor()) {
+                    Move move = new Move.Builder()
+                            .from(position)
+                            .to(targetPos)
+                            .piece(this)
+                            .capturedPiece(targetPiece)
+                            .build();
+
+                    // Check if the move would leave the king in check
+                    if (!wouldLeaveKingInCheck(board, move)) {
+                        legalMoves.add(move);
                     }
                 }
             }
         }
-        
+
         return legalMoves;
     }
 
+    @Override
+    public List<Position> getAttackPositions(Board board) {
+        List<Position> attackPositions = new ArrayList<>();
+        Position position = getPosition();
+        int x = position.getX();
+        int y = position.getY();
+
+        // Knight move offsets
+        int[][] moveOffsets = {
+                {-2, -1}, {-2, 1}, {-1, -2}, {-1, 2},
+                {1, -2}, {1, 2}, {2, -1}, {2, 1}
+        };
+
+        for (int[] offset : moveOffsets) {
+            Position targetPos = new Position(x + offset[0], y + offset[1]);
+
+            if (board.isValidPosition(targetPos)) {
+                attackPositions.add(targetPos);
+            }
+        }
+
+        return attackPositions;
+    }
+
+    @Override
+    public String getType() {
+        return "Knight";
+    }
 }

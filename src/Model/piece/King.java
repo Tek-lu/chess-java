@@ -1,42 +1,119 @@
 package Model.piece;
 
-import Model.Board;
-
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
+
+import Model.*;
 
 public class King extends Piece {
 
-    public King(int color, Square initSq, String img_file) {
-        super(color, initSq, img_file);
+    public King(PieceColor color, Position position) {
+        super(color, position);
     }
 
     @Override
-    public List<Square> getLegalMoves(Board b) {
-LinkedList<Square> legalMoves = new LinkedList<Square>();
-        
-        Square[][] board = b.getSquareArray();
-        
-        int x = this.getPosition().getXNum();
-        int y = this.getPosition().getYNum();
-        
-        for (int i = 1; i > -2; i--) {
-            for (int k = 1; k > -2; k--) {
-                if(!(i == 0 && k == 0)) {
-                    try {
-                        if(!board[y + k][x + i].isOccupied() || 
-                                board[y + k][x + i].getOccupyingPiece().getColor() 
-                                != this.getColor()) {
-                            legalMoves.add(board[y + k][x + i]);
+    protected String determineImageFile() {
+        return getColor() == PieceColor.WHITE ? "/wking.png" : "/bking.png";
+    }
+
+    @Override
+    public List<Move> getLegalMoves(Board board) {
+        List<Move> legalMoves = new ArrayList<>();
+        Position position = getPosition();
+        int x = position.getX();
+        int y = position.getY();
+
+        // Check all 8 squares around the king
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                // Skip the current position
+                if (dx == 0 && dy == 0) {
+                    continue;
+                }
+
+                Position targetPos = new Position(x + dx, y + dy);
+
+                if (board.isValidPosition(targetPos)) {
+                    Piece targetPiece = board.getPiece(targetPos);
+
+                    // Empty square or opponent's piece
+                    if (targetPiece == null || targetPiece.getColor() != getColor()) {
+                        // For the king, we need to check if the new position is under attack
+                        if (!isPositionUnderAttack(board, targetPos)) {
+                            Move move = new Move.Builder()
+                                    .from(position)
+                                    .to(targetPos)
+                                    .piece(this)
+                                    .capturedPiece(targetPiece)
+                                    .build();
+
+                            legalMoves.add(move);
                         }
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        continue;
                     }
                 }
             }
         }
-        
+
+        // TODO: Add castling logic here
+
         return legalMoves;
     }
 
+    /**
+     * Check if a position is under attack by any of the opponent's pieces
+     */
+    private boolean isPositionUnderAttack(Board board, Position position) {
+        PieceColor opponentColor = getColor() == PieceColor.WHITE ?
+                PieceColor.BLACK : PieceColor.WHITE;
+
+        List<Piece> opponentPieces = board.getPieces(opponentColor);
+
+        for (Piece piece : opponentPieces) {
+            List<Position> attackPositions = piece.getAttackPositions(board);
+
+            for (Position attackPos : attackPositions) {
+                if (attackPos.equals(position)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public List<Position> getAttackPositions(Board board) {
+        List<Position> attackPositions = new ArrayList<>();
+        Position position = getPosition();
+        int x = position.getX();
+        int y = position.getY();
+
+        // Check all 8 squares around the king
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                // Skip the current position
+                if (dx == 0 && dy == 0) {
+                    continue;
+                }
+
+                Position targetPos = new Position(x + dx, y + dy);
+
+                if (board.isValidPosition(targetPos)) {
+                    attackPositions.add(targetPos);
+                }
+            }
+        }
+
+        return attackPositions;
+    }
+
+    @Override
+    public String getType() {
+        return "King";
+    }
+
+    @Override
+    public Piece copy() {
+        return new King(getColor(), getPosition());
+    }
 }
