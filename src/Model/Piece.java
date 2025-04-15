@@ -239,17 +239,32 @@ public abstract class Piece {
     /**
      * Check if the move would leave the king in check
      */
+    /**
+     * Check if the move would leave the king in check
+     */
     protected boolean wouldLeaveKingInCheck(Board board, Move move) {
-        // Create a temporary board to simulate the move
-        Board tempBoard = new Board();
-        // TODO: Clone the board state
+        // Create a deep copy of the board to simulate the move
+        Board tempBoard = new Board(board);
+
+        // Find the copied piece on the temporary board
+        Piece tempPiece = tempBoard.getPiece(this.getPosition());
+
+        // Create a new move for the temp board using the copied piece
+        Move tempMove = new Move.Builder()
+                .from(move.getFrom())
+                .to(move.getTo())
+                .piece(tempPiece)
+                .capturedPiece(tempBoard.getPiece(move.getTo()))
+                .isPromotion(move.isPromotion())
+                .isCastling(move.isCastling())
+                .isEnPassant(move.isEnPassant())
+                .build();
 
         // Make the move on the temporary board
-        tempBoard.makeMove(move);
+        tempBoard.makeMove(tempMove);
 
         // Check if the king is in check after the move
         return tempBoard.isInCheck(this.getColor());
-
     }
 
     public abstract Piece copy();

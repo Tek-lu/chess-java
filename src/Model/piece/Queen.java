@@ -13,7 +13,7 @@ public class Queen extends Piece {
 
     @Override
     protected String determineImageFile() {
-        return getColor() == PieceColor.WHITE ? "/wqueen.png" : "/bqueen.png";
+        return getColor() == PieceColor.WHITE ? "images/wq.png" : "images/bq.png";
     }
 
     @Override

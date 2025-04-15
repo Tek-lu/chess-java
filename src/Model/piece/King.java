@@ -13,7 +13,7 @@ public class King extends Piece {
 
     @Override
     protected String determineImageFile() {
-        return getColor() == PieceColor.WHITE ? "/wking.png" : "/bking.png";
+        return getColor() == PieceColor.WHITE ? "images/wk.png" : "images/bk.png";
     }
 
     @Override

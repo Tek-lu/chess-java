@@ -13,7 +13,7 @@ public class Bishop extends Piece {
 
     @Override
     protected String determineImageFile() {
-        return getColor() == PieceColor.WHITE ? "/wbishop.png" : "/bbishop.png";
+        return getColor() == PieceColor.WHITE ? "images/wb.png" : "images/bb.png";
     }
 
     @Override

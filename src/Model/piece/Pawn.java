@@ -14,7 +14,7 @@ public class Pawn extends Piece {
 
     @Override
     protected String determineImageFile() {
-        return getColor() == PieceColor.WHITE ? "/wpawn.png" : "/bpawn.png";
+        return getColor() == PieceColor.WHITE ? "images/wp.png" : "images/bp.png";
     }
 
     @Override
@@ -104,6 +104,12 @@ public class Pawn extends Piece {
             wasMoved = true;
         }
         return moved;
+    }
+
+    @Override
+    public Piece copy() {
+        return new Pawn(getColor(), getPosition());
+
     }
 
     @Override

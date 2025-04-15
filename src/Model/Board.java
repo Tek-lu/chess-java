@@ -1,17 +1,7 @@
 package Model;
-import Controller.CheckmateDetector;
 import Model.piece.*;
 import Model.piece.Rook;
-import View.GameWindow;
-import View.SquareView;
-import Model.PieceColor;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class Board {
@@ -29,7 +19,45 @@ public class Board {
         moveHistory = new ArrayList<>();
         initializeBoard();
     }
+//     * Copy constructor that creates a deep copy of another board
+//     * @param original The original board to copy from
+//     */
+    public Board(Board original) {
+        // Initialize empty arrays and lists
+        this.pieces = new Piece[8][8];
+        this.whitePieces = new ArrayList<>();
+        this.blackPieces = new ArrayList<>();
+        this.moveHistory = new ArrayList<>(original.moveHistory);
 
+        // Copy all pieces
+        for (Piece whitePiece : original.whitePieces) {
+            Piece copiedPiece = whitePiece.copy();
+            whitePieces.add(copiedPiece);
+            Position pos = copiedPiece.getPosition();
+            if (pos != null) {
+                pieces[pos.getY()][pos.getX()] = copiedPiece;
+            }
+
+            // Keep track of the king
+            if (copiedPiece instanceof King) {
+                this.whiteKing = (King) copiedPiece;
+            }
+        }
+
+        for (Piece blackPiece : original.blackPieces) {
+            Piece copiedPiece = blackPiece.copy();
+            blackPieces.add(copiedPiece);
+            Position pos = copiedPiece.getPosition();
+            if (pos != null) {
+                pieces[pos.getY()][pos.getX()] = copiedPiece;
+            }
+
+            // Keep track of the king
+            if (copiedPiece instanceof King) {
+                this.blackKing = (King) copiedPiece;
+            }
+        }
+    }
     private void initializeBoard() {
         // Initialize pawns
         for (int x = 0; x < 8; x++) {
