@@ -1,104 +1,3 @@
-//package View;
-//
-//import Model.Board;
-//import Model.Piece;
-//
-//import java.awt.Color;
-//import java.awt.Graphics;
-//
-//import javax.swing.*;
-//
-//@SuppressWarnings("serial")
-//public class SquareView extends JComponent {
-//    private Board b;
-//
-//    private final int color;
-//    private Piece occupyingPiece;
-//    private boolean dispPiece;
-//
-//    private int xNum;
-//    private int yNum;
-//
-//    public SquareView(Board b, int c, int xNum, int yNum) {
-//
-//        this.b = b;
-//        this.color = c;
-//        this.dispPiece = true;
-//        this.xNum = xNum;
-//        this.yNum = yNum;
-//
-//
-//        this.setBorder(BorderFactory.createEmptyBorder());
-//    }
-//
-//    public int getColor() {
-//        return this.color;
-//    }
-//
-//    public Piece getOccupyingPiece() {
-//        return occupyingPiece;
-//    }
-//
-//    public boolean isOccupied() {
-//        return (this.occupyingPiece != null);
-//    }
-//
-//    public int getXNum() {
-//        return this.xNum;
-//    }
-//
-//    public int getYNum() {
-//        return this.yNum;
-//    }
-//
-//    public void setDisplay(boolean v) {
-//        this.dispPiece = v;
-//    }
-//
-//    public void put(Piece p) {
-//        this.occupyingPiece = p;
-//        p.setPosition(this);
-//    }
-//
-//    public Piece removePiece() {
-//        Piece p = this.occupyingPiece;
-//        this.occupyingPiece = null;
-//        return p;
-//    }
-//
-//    public void capture(Piece p) {
-//        Piece k = getOccupyingPiece();
-//        if (k.getColor() == 0) b.Bpieces.remove(k);
-//        if (k.getColor() == 1) b.Wpieces.remove(k);
-//        this.occupyingPiece = p;
-//    }
-//
-//    public void paintComponent(Graphics g) {
-//        super.paintComponent(g);
-//
-//        if (this.color == 1) {
-//            g.setColor(new Color(221,192,127));
-//        } else {
-//            g.setColor(new Color(101,67,33));
-//        }
-//
-//        g.fillRect(this.getX(), this.getY(), this.getWidth(), this.getHeight());
-//
-//        if(occupyingPiece != null && dispPiece) {
-//            occupyingPiece.draw(g);
-//        }
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        int prime = 31;
-//        int result = 1;
-//        result = prime * result + xNum;
-//        result = prime * result + yNum;
-//        return result;
-//    }
-//
-//}
 package View;
 
 import Model.Piece;
@@ -110,6 +9,8 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
 import javax.imageio.ImageIO;
+import java.io.File;
+import java.net.URL;
 
 /**
  * Represents a single square on the chess board UI.
@@ -238,38 +139,111 @@ public class SquareView extends JPanel {
         if (occupyingPiece == null) return;
 
         try {
-            // Load the image for the piece
-            String imagePath = "/images/" + occupyingPiece.getImageFile();
-            Image pieceImage = loadPieceImage(imagePath);
+            // Get just the filename from the piece
+            String imageFileName = occupyingPiece.getImageFile();
+
+            // Try multiple methods to load the image
+            Image pieceImage = loadPieceImageMultipleWays(imageFileName);
 
             if (pieceImage != null) {
                 // Center the piece image on the square
                 int x = (getWidth() - pieceImage.getWidth(null)) / 2;
                 int y = (getHeight() - pieceImage.getHeight(null)) / 2;
                 g.drawImage(pieceImage, x, y, null);
+            } else {
+                // Fallback to drawing a simple representation
+                drawFallbackPiece(g);
             }
         } catch (Exception e) {
-            // If image loading fails, draw a simple representation of the piece
-            g.setColor(occupyingPiece.getColor().toString().equals("WHITE") ? Color.WHITE : Color.BLACK);
-            g.fillOval(15, 15, getWidth() - 30, getHeight() - 30);
-            g.setColor(occupyingPiece.getColor().toString().equals("WHITE") ? Color.BLACK : Color.WHITE);
-            g.setFont(new Font("Arial", Font.BOLD, 20));
-            g.drawString(occupyingPiece.getType().substring(0, 1), getWidth() / 2 - 8, getHeight() / 2 + 8);
+            System.err.println("Error drawing piece: " + e.getMessage());
+            // Fallback to drawing a simple representation
+            drawFallbackPiece(g);
         }
     }
 
     /**
-     * Helper method to load piece images.
+     * Attempts to load the piece image using multiple methods.
      *
-     * @param imagePath The path to the image resource
-     * @return The loaded image, or null if loading failed
+     * @param imageFileName The image file name
+     * @return The loaded image, or null if all loading methods failed
      */
-    private Image loadPieceImage(String imagePath) {
+    private Image loadPieceImageMultipleWays(String imageFileName) {
+        Image image = null;
+
+        // Method 1: Try to load from class resources
         try {
-            return ImageIO.read(Objects.requireNonNull(getClass().getResource(imagePath)));
-        } catch (IOException | IllegalArgumentException e) {
-            System.err.println("Failed to load piece image: " + imagePath);
-            return null;
+            URL resourceUrl = getClass().getResource("/images/" + imageFileName);
+            if (resourceUrl != null) {
+                return ImageIO.read(resourceUrl);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load from class resources: " + e.getMessage());
         }
+
+        // Method 2: Try to load from classpath root resources
+        try {
+            URL resourceUrl = getClass().getClassLoader().getResource("images/" + imageFileName);
+            if (resourceUrl != null) {
+                return ImageIO.read(resourceUrl);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load from classpath root: " + e.getMessage());
+        }
+
+        // Method 3: Try to load from file system relative to project
+        try {
+            File file = new File("resources/images/" + imageFileName);
+            if (file.exists()) {
+                return ImageIO.read(file);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load from resources/images directory: " + e.getMessage());
+        }
+
+        // Method 4: Try src/main/resources path
+        try {
+            File file = new File("src/main/resources/images/" + imageFileName);
+            if (file.exists()) {
+                return ImageIO.read(file);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load from src/main/resources/images: " + e.getMessage());
+        }
+
+        // Method 5: Try direct project structure
+        try {
+            File file = new File("src/resources/images/" + imageFileName);
+            if (file.exists()) {
+                return ImageIO.read(file);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load from src/resources/images: " + e.getMessage());
+        }
+
+        // Method 6: Try direct "images" directory
+        try {
+            File file = new File("images/" + imageFileName);
+            if (file.exists()) {
+                return ImageIO.read(file);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load from images directory: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Draws a fallback representation of the chess piece when image loading fails.
+     *
+     * @param g The graphics context
+     */
+    private void drawFallbackPiece(Graphics g) {
+        g.setColor(occupyingPiece.getColor().toString().equals("WHITE") ? Color.WHITE : Color.BLACK);
+        g.fillOval(15, 15, getWidth() - 30, getHeight() - 30);
+        g.setColor(occupyingPiece.getColor().toString().equals("WHITE") ? Color.BLACK : Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 20));
+        String pieceType = occupyingPiece.getType();
+        g.drawString(pieceType.substring(0, 1), getWidth() / 2 - 8, getHeight() / 2 + 8);
     }
 }

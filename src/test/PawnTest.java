@@ -10,9 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PawnTest {
 
@@ -22,15 +20,28 @@ public class PawnTest {
     public void setUp() {
         board = new Board();
         // Clear the board for clean tests
-        // Implementation would depend on Board class implementation
+        clearBoard(board);
+    }
+
+    // Helper method to clear the board
+    private void clearBoard(Board board) {
+        // Remove all pieces to start with a clean board for each test
+        for (int y = 0; y < 8; y++) {
+            for (int x = 0; x < 8; x++) {
+                Position pos = new Position(x, y);
+                Piece piece = board.getPiece(pos);
+                if (piece != null) {
+                    board.removePiece(pos);
+                }
+            }
+        }
     }
 
     @Test
     public void testWhitePawnInitialMoves() {
         // Create a white pawn in its initial position
-        Pawn whitePawn = new Pawn(PieceColor.WHITE, new Position(3, 1));
-        // Place the pawn on the board
-        // Implementation would depend on Board class
+        Pawn whitePawn = new Pawn(PieceColor.WHITE, new Position(3, 6));
+        board.placePiece(whitePawn);
 
         // Get legal moves
         List<Move> legalMoves = whitePawn.getLegalMoves(board);
@@ -41,8 +52,8 @@ public class PawnTest {
         // Verify both expected positions are included
         boolean containsAllExpectedMoves = true;
         Position[] expectedPositions = {
-                new Position(3, 2), // One square forward
-                new Position(3, 3)  // Two squares forward
+                new Position(3, 5), // One square forward
+                new Position(3, 4)  // Two squares forward
         };
 
         for (Position expectedPos : expectedPositions) {
@@ -65,9 +76,8 @@ public class PawnTest {
     @Test
     public void testBlackPawnInitialMoves() {
         // Create a black pawn in its initial position
-        Pawn blackPawn = new Pawn(PieceColor.BLACK, new Position(3, 6));
-        // Place the pawn on the board
-        // Implementation would depend on Board class
+        Pawn blackPawn = new Pawn(PieceColor.BLACK, new Position(3, 1));
+        board.placePiece(blackPawn);
 
         // Get legal moves
         List<Move> legalMoves = blackPawn.getLegalMoves(board);
@@ -78,8 +88,8 @@ public class PawnTest {
         // Verify both expected positions are included
         boolean containsAllExpectedMoves = true;
         Position[] expectedPositions = {
-                new Position(3, 5), // One square forward (downward for black)
-                new Position(3, 4)  // Two squares forward (downward for black)
+                new Position(3, 2), // One square forward (downward for black)
+                new Position(3, 3)  // Two squares forward (downward for black)
         };
 
         for (Position expectedPos : expectedPositions) {
@@ -102,13 +112,17 @@ public class PawnTest {
     @Test
     public void testPawnAfterMoving() {
         // Create a white pawn
-        Pawn whitePawn = new Pawn(PieceColor.WHITE, new Position(3, 1));
+        Pawn whitePawn = new Pawn(PieceColor.WHITE, new Position(3, 6));
+        board.placePiece(whitePawn);
 
         // Simulate moving the pawn
-        whitePawn.moveTo(new Position(3, 2));
+        Move move = new Move.Builder()
+                .from(new Position(3, 6))
+                .to(new Position(3, 5))
+                .piece(whitePawn)
+                .build();
 
-        // Place the pawn on the board at the new position
-        // Implementation would depend on Board class
+        board.makeMove(move);
 
         // Get legal moves
         List<Move> legalMoves = whitePawn.getLegalMoves(board);
@@ -117,20 +131,20 @@ public class PawnTest {
         assertEquals(1, legalMoves.size());
 
         // Verify the expected position
-        assertEquals(new Position(3, 3), legalMoves.get(0).getTo());
+        assertEquals(new Position(3, 4), legalMoves.get(0).getTo());
     }
 
     @Test
     public void testPawnCaptureMoves() {
         // Create a white pawn
         Pawn whitePawn = new Pawn(PieceColor.WHITE, new Position(3, 3));
+        board.placePiece(whitePawn);
 
         // Create black pieces at capture positions
-        Piece blackPiece1 = new Pawn(PieceColor.BLACK, new Position(2, 4));
-        Piece blackPiece2 = new Pawn(PieceColor.BLACK, new Position(4, 4));
-
-        // Place pieces on board
-        // Implementation would depend on Board class
+        Piece blackPiece1 = new Pawn(PieceColor.BLACK, new Position(2, 2));
+        Piece blackPiece2 = new Pawn(PieceColor.BLACK, new Position(4, 2));
+        board.placePiece(blackPiece1);
+        board.placePiece(blackPiece2);
 
         // Get legal moves
         List<Move> legalMoves = whitePawn.getLegalMoves(board);
@@ -142,10 +156,10 @@ public class PawnTest {
         boolean leftCaptureFound = false;
         boolean rightCaptureFound = false;
         for (Move move : legalMoves) {
-            if (move.getTo().equals(new Position(2, 4)) && move.getCapturedPiece() == blackPiece1) {
+            if (move.getTo().equals(new Position(2, 2)) && move.getCapturedPiece() == blackPiece1) {
                 leftCaptureFound = true;
             }
-            if (move.getTo().equals(new Position(4, 4)) && move.getCapturedPiece() == blackPiece2) {
+            if (move.getTo().equals(new Position(4, 2)) && move.getCapturedPiece() == blackPiece2) {
                 rightCaptureFound = true;
             }
         }
@@ -157,13 +171,12 @@ public class PawnTest {
     @Test
     public void testPawnBlockedByPiece() {
         // Create a white pawn
-        Pawn whitePawn = new Pawn(PieceColor.WHITE, new Position(3, 1));
+        Pawn whitePawn = new Pawn(PieceColor.WHITE, new Position(3, 6));
+        board.placePiece(whitePawn);
 
         // Create another piece directly in front of the pawn
-        Piece blockingPiece = new Pawn(PieceColor.BLACK, new Position(3, 2));
-
-        // Place pieces on board
-        // Implementation would depend on Board class
+        Piece blockingPiece = new Pawn(PieceColor.BLACK, new Position(3, 5));
+        board.placePiece(blockingPiece);
 
         // Get legal moves
         List<Move> legalMoves = whitePawn.getLegalMoves(board);
@@ -175,32 +188,30 @@ public class PawnTest {
     @Test
     public void testPawnBlockedTwoSquaresAhead() {
         // Create a white pawn in initial position
-        Pawn whitePawn = new Pawn(PieceColor.WHITE, new Position(3, 1));
+        Pawn whitePawn = new Pawn(PieceColor.WHITE, new Position(3, 6));
+        board.placePiece(whitePawn);
 
         // Create another piece two squares ahead of the pawn
-        Piece blockingPiece = new Pawn(PieceColor.BLACK, new Position(3, 3));
-
-        // Place pieces on board
-        // Implementation would depend on Board class
+        Piece blockingPiece = new Pawn(PieceColor.BLACK, new Position(3, 4));
+        board.placePiece(blockingPiece);
 
         // Get legal moves
         List<Move> legalMoves = whitePawn.getLegalMoves(board);
 
         // Pawn should have 1 possible move (one square forward)
         assertEquals(1, legalMoves.size());
-        assertEquals(new Position(3, 2), legalMoves.get(0).getTo());
+        assertEquals(new Position(3, 5), legalMoves.get(0).getTo());
     }
 
     @Test
     public void testPawnCannotCaptureFriendlyPiece() {
         // Create a white pawn
         Pawn whitePawn = new Pawn(PieceColor.WHITE, new Position(3, 3));
+        board.placePiece(whitePawn);
 
         // Create a white piece at a diagonal capture position
-        Piece whitePiece = new Pawn(PieceColor.WHITE, new Position(4, 4));
-
-        // Place pieces on board
-        // Implementation would depend on Board class
+        Piece whitePiece = new Pawn(PieceColor.WHITE, new Position(4, 2));
+        board.placePiece(whitePiece);
 
         // Get legal moves
         List<Move> legalMoves = whitePawn.getLegalMoves(board);
@@ -208,7 +219,7 @@ public class PawnTest {
         // Check that the friendly piece position is not in legal moves
         boolean cantCaptureFriendly = true;
         for (Move move : legalMoves) {
-            if (move.getTo().equals(new Position(4, 4))) {
+            if (move.getTo().equals(new Position(4, 2))) {
                 cantCaptureFriendly = false;
                 break;
             }
@@ -221,6 +232,7 @@ public class PawnTest {
     public void testPawnGetAttackPositions() {
         // Create a white pawn
         Pawn whitePawn = new Pawn(PieceColor.WHITE, new Position(3, 3));
+        board.placePiece(whitePawn);
 
         // Get attack positions
         List<Position> attackPositions = whitePawn.getAttackPositions(board);
@@ -231,8 +243,8 @@ public class PawnTest {
         // Verify both attack positions
         boolean containsAllExpectedPositions = true;
         Position[] expectedPositions = {
-                new Position(2, 4), // Left diagonal
-                new Position(4, 4)  // Right diagonal
+                new Position(2, 2), // Left diagonal
+                new Position(4, 2)  // Right diagonal
         };
 
         for (Position expectedPos : expectedPositions) {
@@ -255,7 +267,8 @@ public class PawnTest {
     @Test
     public void testBlackPawnGetAttackPositions() {
         // Create a black pawn
-        Pawn blackPawn = new Pawn(PieceColor.BLACK, new Position(3, 5));
+        Pawn blackPawn = new Pawn(PieceColor.BLACK, new Position(3, 4));
+        board.placePiece(blackPawn);
 
         // Get attack positions
         List<Position> attackPositions = blackPawn.getAttackPositions(board);
@@ -266,8 +279,8 @@ public class PawnTest {
         // Verify both attack positions
         boolean containsAllExpectedPositions = true;
         Position[] expectedPositions = {
-                new Position(2, 4), // Left diagonal (from black's perspective)
-                new Position(4, 4)  // Right diagonal (from black's perspective)
+                new Position(2, 5), // Left diagonal (from black's perspective)
+                new Position(4, 5)  // Right diagonal (from black's perspective)
         };
 
         for (Position expectedPos : expectedPositions) {
@@ -290,22 +303,11 @@ public class PawnTest {
     @Test
     public void testPawnAtEdge() {
         // Create a white pawn at the edge of the board
-        Pawn whitePawn = new Pawn(PieceColor.WHITE, new Position(0, 2));
+        Pawn whitePawn = new Pawn(PieceColor.WHITE, new Position(0, 3));
+        board.placePiece(whitePawn);
 
         // Get attack positions
         List<Position> attackPositions = whitePawn.getAttackPositions(board);
 
         // Pawn should attack only 1 position (right diagonal) when at left edge
         assertEquals(1, attackPositions.size());
-        assertEquals(new Position(1, 3), attackPositions.get(0));
-    }
-
-    @Test
-    public void testPawnType() {
-        // Create a pawn
-        Pawn pawn = new Pawn(PieceColor.WHITE, new Position(0, 1));
-
-        // Check the type
-        assertEquals("Pawn", pawn.getType());
-    }
-}

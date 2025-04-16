@@ -14,7 +14,7 @@ public class Knight extends Piece {
 
     @Override
     protected String determineImageFile() {
-        return getColor() == PieceColor.WHITE ? "images/wn.png" : "images/bn.png";
+        return getColor() == PieceColor.WHITE ? "wn.png" : "bn.png";
     }
 
     @Override

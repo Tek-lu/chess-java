@@ -13,7 +13,7 @@ public class Rook extends Piece {
 
     @Override
     protected String determineImageFile() {
-        return getColor() == PieceColor.WHITE ? "images/wr.png" : "images/br.png";
+        return getColor() == PieceColor.WHITE ? "wr.png" : "br.png";
     }
 
     @Override

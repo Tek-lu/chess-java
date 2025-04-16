@@ -291,6 +291,7 @@ public class GameWindow extends JFrame {
 
         // Display start menu initially
         showStartMenu();
+        controller.setView(this); //+ -
 
         // Set window properties
         setSize(800, 600);
