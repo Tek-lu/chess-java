@@ -89,8 +89,8 @@ The codebase is organized into packages following the MVC pattern:
 ```
 src/
 ├── Controller/
-│   ├── ChessController.java
-│   └── CheckmateDetector.java
+│   ├── ChessControllerIterface.java
+│   └── ChessController.java
 ├── Model/
 │   ├── piece/
 │   │   ├── Bishop.java

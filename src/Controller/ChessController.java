@@ -106,7 +106,7 @@ import java.util.List;
  * Main controller for the chess game that connects the model and view.
  * Handles game logic and user interactions.
  */
-public class ChessController {
+public class ChessController implements ChessControllerInterface {
     private GameState gameState;
     private GameWindow view;
     private String gameMode;
