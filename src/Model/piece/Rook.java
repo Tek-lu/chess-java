@@ -6,9 +6,10 @@ import java.util.List;
 import Model.*;
 
 public class Rook extends Piece {
-
+    private boolean hasMoved;
     public Rook(PieceColor color, Position position) {
         super(color, position);
+        this.hasMoved = false;
     }
 
     @Override
@@ -102,6 +103,25 @@ public class Rook extends Piece {
         }
 
         return attackPositions;
+    }
+
+    @Override
+    public boolean moveTo(Position position) {
+        boolean moved = super.moveTo(position);
+        if (moved) {
+            hasMoved = true;
+        }
+        return moved;
+    }
+
+
+    // Getter and setter for hasMoved
+    public boolean getHasMoved() {
+        return hasMoved;
+    }
+
+    public void setHasMoved(boolean hasMoved) {
+        this.hasMoved = hasMoved;
     }
 
     @Override

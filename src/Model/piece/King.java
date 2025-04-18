@@ -6,9 +6,12 @@ import java.util.List;
 import Model.*;
 
 public class King extends Piece {
+    // Add a field to track if the king has moved (needed for castling)
+    private boolean hasMoved;
 
     public King(PieceColor color, Position position) {
         super(color, position);
+        this.hasMoved = false;
     }
 
     @Override
@@ -47,16 +50,124 @@ public class King extends Piece {
                                     .capturedPiece(targetPiece)
                                     .build();
 
-                            legalMoves.add(move);
+                            if (!wouldLeaveKingInCheck(board, move)) {
+                                legalMoves.add(move);
+                            }
                         }
                     }
                 }
             }
         }
 
-        // TODO: Add castling logic here
+        // Add castling moves if conditions are met
+        addCastlingMoves(board, legalMoves);
 
         return legalMoves;
+    }
+
+    /**
+     * Add castling moves if the conditions are met:
+     * 1. King has not moved
+     * 2. Rook has not moved
+     * 3. No pieces between king and rook
+     * 4. King is not in check
+     * 5. King does not pass through a square that is attacked
+     */
+    private void addCastlingMoves(Board board, List<Move> legalMoves) {
+        if (hasMoved || board.isInCheck(getColor())) {
+            return; // Can't castle if king has moved or is in check
+        }
+
+        Position position = getPosition();
+        int y = position.getY();
+
+        // Kingside castling (O-O)
+        addKingsideCastlingMove(board, legalMoves, y);
+
+        // Queenside castling (O-O-O)
+        addQueensideCastlingMove(board, legalMoves, y);
+    }
+
+    private void addKingsideCastlingMove(Board board, List<Move> legalMoves, int y) {
+        // Check kingside castling
+        Position rookPosition = new Position(7, y);
+        Piece rook = board.getPiece(rookPosition);
+
+        if (rook instanceof Rook && rook.getColor() == getColor() && !((Rook) rook).getHasMoved()) {
+            // Check if squares between king and rook are empty
+            boolean pathClear = true;
+            for (int x = 5; x < 7; x++) {
+                Position pos = new Position(x, y);
+                if (board.getPiece(pos) != null) {
+                    pathClear = false;
+                    break;
+                }
+                // Also check if the square the king passes through is under attack
+                if (x == 5 && isPositionUnderAttack(board, pos)) {
+                    pathClear = false;
+                    break;
+                }
+            }
+
+            if (pathClear) {
+                // Create a castling move
+                Position kingFinalPos = new Position(6, y);
+                Position rookFinalPos = new Position(5, y);
+
+                Move castlingMove = new Move.Builder()
+                        .from(getPosition())
+                        .to(kingFinalPos)
+                        .piece(this)
+                        .isCastling(true)
+                        .castlingRook((Rook) rook)
+                        .rookFromPosition(rookPosition)
+                        .rookToPosition(rookFinalPos)
+                        .build();
+
+                legalMoves.add(castlingMove);
+            }
+        }
+    }
+
+    private void addQueensideCastlingMove(Board board, List<Move> legalMoves, int y) {
+        // Check queenside castling
+        Position rookPosition = new Position(0, y);
+        Piece rook = board.getPiece(rookPosition);
+
+        if (rook instanceof Rook && rook.getColor() == getColor() && !((Rook) rook).getHasMoved()) {
+            // Check if squares between king and rook are empty
+            boolean pathClear = true;
+            for (int x = 1; x < 4; x++) {
+                Position pos = new Position(x, y);
+                if (board.getPiece(pos) != null) {
+                    pathClear = false;
+                    break;
+                }
+                // Also check if the square the king passes through is under attack
+                if (x == 3 && isPositionUnderAttack(board, pos)) {
+                    pathClear = false;
+                    break;
+                }
+            }
+
+            if (pathClear) {
+                // Create a castling move
+                Position kingFinalPos = new Position(2, y);
+                Position rookFinalPos = new Position(3, y);
+
+                Move castlingMove = new Move.Builder()
+                        .from(getPosition())
+                        .to(kingFinalPos)
+                        .piece(this)
+                        .isCastling(true)
+                        .castlingRook((Rook) rook)
+                        .rookFromPosition(rookPosition)
+                        .rookToPosition(rookFinalPos)
+                        .build();
+
+                legalMoves.add(castlingMove);
+            }
+        }
     }
 
     /**
@@ -114,6 +225,26 @@ public class King extends Piece {
 
     @Override
     public Piece copy() {
-        return new King(getColor(), getPosition());
+        King copiedKing = new King(getColor(), new Position(getPosition().getX(), getPosition().getY()));
+        copiedKing.hasMoved = this.hasMoved;
+        return copiedKing;
+    }
+
+    @Override
+    public boolean moveTo(Position position) {
+        boolean moved = super.moveTo(position);
+        if (moved) {
+            hasMoved = true;
+        }
+        return moved;
+    }
+
+    // Getter and setter for hasMoved (needed for tests)
+    public boolean getHasMoved() {
+        return hasMoved;
+    }
+
+    public void setHasMoved(boolean hasMoved) {
+        this.hasMoved = hasMoved;
     }
 }

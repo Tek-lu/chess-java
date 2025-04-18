@@ -311,3 +311,5 @@ public class PawnTest {
 
         // Pawn should attack only 1 position (right diagonal) when at left edge
         assertEquals(1, attackPositions.size());
+    }
+}

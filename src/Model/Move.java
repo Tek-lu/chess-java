@@ -1,5 +1,8 @@
 package Model;
 
+import Model.piece.Rook;
+import Model.piece.*;
+import  Model.Position;
 public class Move {
     private final Position from;
     private final Position to;
@@ -8,6 +11,13 @@ public class Move {
     private final boolean isPromotion;
     private final boolean isCastling;
     private final boolean isEnPassant;
+    private final boolean isPawnTwoSquareMove;
+    private final Rook castlingRook;
+    private final Position rookFromPosition;
+    private final String promotionType;
+
+    private final Position rookToPosition;
+    private final Position capturedPiecePosition;
 
     private Move(Builder builder) {
         this.from = builder.from;
@@ -17,6 +27,13 @@ public class Move {
         this.isPromotion = builder.isPromotion;
         this.isCastling = builder.isCastling;
         this.isEnPassant = builder.isEnPassant;
+        this.promotionType = builder.promotionType;
+
+        this.isPawnTwoSquareMove = builder.isPawnTwoSquareMove;
+        this.castlingRook = builder.castlingRook;
+        this.rookFromPosition = builder.rookFromPosition;
+        this.rookToPosition = builder.rookToPosition;
+        this.capturedPiecePosition = builder.capturedPiecePosition;
     }
 
     public Position getFrom() {
@@ -34,6 +51,10 @@ public class Move {
     public Piece getCapturedPiece() {
         return capturedPiece;
     }
+    public String getPromotionType() {
+        return promotionType;
+    }
+
 
     public boolean isPromotion() {
         return isPromotion;
@@ -47,6 +68,26 @@ public class Move {
         return isEnPassant;
     }
 
+    public boolean isPawnTwoSquareMove() {
+        return isPawnTwoSquareMove;
+    }
+
+    public Rook getCastlingRook() {
+        return castlingRook;
+    }
+
+    public Position getRookFromPosition() {
+        return rookFromPosition;
+    }
+
+    public Position getRookToPosition() {
+        return rookToPosition;
+    }
+
+    public Position getCapturedPiecePosition() {
+        return capturedPiecePosition;
+    }
+
     // Builder pattern for Move construction
     public static class Builder {
         private Position from;
@@ -54,8 +95,16 @@ public class Move {
         private Piece piece;
         private Piece capturedPiece;
         private boolean isPromotion;
+        private String promotionType;
+
         private boolean isCastling;
         private boolean isEnPassant;
+        private boolean isPawnTwoSquareMove = false;
+        private Rook castlingRook;
+        private Position rookFromPosition;
+        private Position rookToPosition;
+        private Position capturedPiecePosition;
+
 
         public Builder from(Position from) {
             this.from = from;
@@ -81,19 +130,56 @@ public class Move {
             this.isPromotion = isPromotion;
             return this;
         }
+        public Builder promotionType(String promotionType) {
+            this.promotionType = promotionType;
+            return this;
+        }
 
         public Builder isCastling(boolean isCastling) {
             this.isCastling = isCastling;
             return this;
         }
+        public Builder castlingRook(Rook castlingRook) {
+            this.castlingRook = castlingRook;
+            return this;
+        }
 
+        public Builder rookFromPosition(Position rookFromPosition) {
+            this.rookFromPosition = rookFromPosition;
+            return this;
+        }
+
+        public Builder rookToPosition(Position rookToPosition) {
+            this.rookToPosition = rookToPosition;
+            return this;
+        }
+
+        public Builder capturedPiecePosition(Position capturedPiecePosition) {
+            this.capturedPiecePosition = capturedPiecePosition;
+            return this;
+        }
         public Builder isEnPassant(boolean isEnPassant) {
             this.isEnPassant = isEnPassant;
+            return this;
+        }
+
+        /**
+         * Determines if this move was a pawn's two-square advance
+         * @return true if this move represents a pawn moving two squares, false otherwise
+         */
+        public Builder isPawnTwoSquareMove(boolean b) {
+            this.isPawnTwoSquareMove = b;
             return this;
         }
 
         public Move build() {
             return new Move(this);
         }
+
+        /**
+         * Determines if this move was a pawn's two-square advance
+         * @return true if this move represents a pawn moving two squares, false otherwise
+         */
+
     }
 }

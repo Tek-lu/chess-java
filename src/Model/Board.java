@@ -94,16 +94,16 @@ public class Board {
         placePiece(whiteKing);
     }
 
-    private void placePiece(Piece piece) {
-        Position pos = piece.getPosition();
-        pieces[pos.getY()][pos.getX()] = piece;
-
-        if (piece.getColor() == PieceColor.WHITE) {
-            whitePieces.add(piece);
-        } else {
-            blackPieces.add(piece);
-        }
-    }
+//    private void placePiece(Piece piece) {
+//        Position pos = piece.getPosition();
+//        pieces[pos.getY()][pos.getX()] = piece;
+//
+//        if (piece.getColor() == PieceColor.WHITE) {
+//            whitePieces.add(piece);
+//        } else {
+//            blackPieces.add(piece);
+//        }
+//    }
 
     public Piece getPiece(Position position) {
         if (!isValidPosition(position)) {
@@ -125,29 +125,47 @@ public class Board {
     public King getKing(PieceColor color) {
         return color == PieceColor.WHITE ? whiteKing : blackKing;
     }
+    /**
+     * Places a piece on the board at the piece's position
+     * @param piece The piece to place on the board
+     * @return true if the piece was placed successfully, false otherwise
+     */
+    public boolean placePiece(Piece piece) {
+        if (piece == null) {
+            return false;
+        }
 
-    public boolean makeMove(Move move) {
-        Position from = move.getFrom();
-        Position to = move.getTo();
-        Piece piece = move.getPiece();
+        Position pos = piece.getPosition();
 
-        // Remove captured piece if exists
-        if (move.getCapturedPiece() != null) {
-            Piece capturedPiece = move.getCapturedPiece();
-            if (capturedPiece.getColor() == PieceColor.WHITE) {
-                whitePieces.remove(capturedPiece);
-            } else {
-                blackPieces.remove(capturedPiece);
+        // Check if position is valid
+        if (!isValidPosition(pos)) {
+            return false;
+        }
+
+        // Check if the position is already occupied
+        if (getPiece(pos) != null) {
+            // Optionally: remove the existing piece first
+            removePiece(pos);
+        }
+
+        // Place the piece
+        pieces[pos.getY()][pos.getX()] = piece;
+
+        // Add to the appropriate list
+        if (piece.getColor() == PieceColor.WHITE) {
+            whitePieces.add(piece);
+            // Track the king if this is a king piece
+            if (piece instanceof King) {
+                whiteKing = (King) piece;
+            }
+        } else {
+            blackPieces.add(piece);
+            // Track the king if this is a king piece
+            if (piece instanceof King) {
+                blackKing = (King) piece;
             }
         }
 
-        // Update piece position
-        pieces[from.getY()][from.getX()] = null;
-        pieces[to.getY()][to.getX()] = piece;
-        piece.setPosition(to);
-
-        // Add to move history
-        moveHistory.add(move);
         return true;
     }
 
@@ -176,6 +194,8 @@ public class Board {
         return false;
     }
 
+
+
     public boolean isCheckmate(PieceColor color) {
         if (!isInCheck(color)) {
             return false;
@@ -199,5 +219,122 @@ public class Board {
             return null;
         }
         return moveHistory.get(moveHistory.size() - 1);
+    }
+    // Add this to your existing Board class
+
+    public boolean makeMove(Move move) {
+        Position from = move.getFrom();
+        Position to = move.getTo();
+        Piece piece = move.getPiece();
+
+        // Handle en passant capture (captured piece is not at the destination)
+        if (move.isEnPassant()) {
+            Position capturedPos = move.getCapturedPiecePosition();
+            Piece capturedPiece = getPiece(capturedPos);
+
+            // Remove the captured pawn
+            pieces[capturedPos.getY()][capturedPos.getX()] = null;
+            if (capturedPiece.getColor() == PieceColor.WHITE) {
+                whitePieces.remove(capturedPiece);
+            } else {
+                blackPieces.remove(capturedPiece);
+            }
+        }
+        // Handle regular capture
+        else if (move.getCapturedPiece() != null) {
+            Piece capturedPiece = move.getCapturedPiece();
+            if (capturedPiece.getColor() == PieceColor.WHITE) {
+                whitePieces.remove(capturedPiece);
+            } else {
+                blackPieces.remove(capturedPiece);
+            }
+        }
+
+        // Handle castling (move the rook as well)
+        if (move.isCastling()) {
+            Rook rook = move.getCastlingRook();
+            Position rookFrom = move.getRookFromPosition();
+            Position rookTo = move.getRookToPosition();
+
+            // Move the rook
+            pieces[rookFrom.getY()][rookFrom.getX()] = null;
+            pieces[rookTo.getY()][rookTo.getX()] = rook;
+            rook.setPosition(rookTo);
+            rook.setHasMoved(true);
+        }
+
+        // Update piece position
+        pieces[from.getY()][from.getX()] = null;
+
+        // Handle promotion
+        if (move.isPromotion()) {
+            // Create the promoted piece
+            Piece promotedPiece;
+            String promotionType = move.getPromotionType();
+            PieceColor color = piece.getColor();
+
+            switch (promotionType) {
+                case "Queen":
+                    promotedPiece = new Queen(color, to);
+                    break;
+                case "Rook":
+                    promotedPiece = new Rook(color, to);
+                    break;
+                case "Bishop":
+                    promotedPiece = new Bishop(color, to);
+                    break;
+                case "Knight":
+                    promotedPiece = new Knight(color, to);
+                    break;
+                default:
+                    promotedPiece = new Queen(color, to); // Default to queen
+            }
+
+            // Update the board and pieces list
+            pieces[to.getY()][to.getX()] = promotedPiece;
+
+            // Remove the pawn from the pieces list
+            if (color == PieceColor.WHITE) {
+                whitePieces.remove(piece);
+                whitePieces.add(promotedPiece);
+            } else {
+                blackPieces.remove(piece);
+                blackPieces.add(promotedPiece);
+            }
+        } else {
+            // Normal move
+            pieces[to.getY()][to.getX()] = piece;
+            piece.setPosition(to);
+
+            // Mark piece as moved
+            if (piece instanceof Pawn) {
+                ((Pawn) piece).setHasMoved(true);
+            } else if (piece instanceof King) {
+                ((King) piece).setHasMoved(true);
+            } else if (piece instanceof Rook) {
+                ((Rook) piece).setHasMoved(true);
+            }
+        }
+
+        // Add to move history
+        moveHistory.add(move);
+        return true;
+    }
+
+    // Add this method to the Board class if not already there
+    public void removePiece(Position position) {
+        if (!isValidPosition(position)) {
+            return;
+        }
+
+        Piece piece = getPiece(position);
+        if (piece != null) {
+            if (piece.getColor() == PieceColor.WHITE) {
+                whitePieces.remove(piece);
+            } else {
+                blackPieces.remove(piece);
+            }
+            pieces[position.getY()][position.getX()] = null;
+        }
     }
 }

@@ -59,7 +59,6 @@ public class GameState {
             gameOver = true;
             gameResult = "Draw by stalemate";
         }
-        // Other draw conditions could be added here
     }
 
     public void resetGame() {
